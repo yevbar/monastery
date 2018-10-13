@@ -1,5 +1,7 @@
+from bson.json_util import dumps
 from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
+from json import loads
 import os
 
 app = Flask(__name__)
@@ -27,9 +29,7 @@ def database_test():
     })
    vals = mongo.db["vals"]
    cursor = vals.find({})
-   for document in cursor:
-       print(document)
-   return jsonify({"message": "success"}) 
+   return jsonify({"vals": loads(dumps(cursor))}) 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")

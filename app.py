@@ -8,15 +8,17 @@ application = Flask(__name__, static_folder='./react_app/build')
 application.config["MONGO_URI"] = os.environ["MONGODB_URI"]
 mongo = PyMongo(application)
 
+@application.route("/hello")
+def hello():
+    return "hello"
+
 # Serve React App
 @application.route('/', defaults={'path': ''})
 @application.route('/<path:path>')
 def serve(path):
     if path != "" and os.path.exists("./react_app/build/" + path):
-        print("We're returning from directory")
         return send_from_directory('./react_app/build', path)
     else:
-        print("We're returning index.html")
         return send_from_directory('./react_app/build', 'index.html')
 
 """

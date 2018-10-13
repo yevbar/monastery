@@ -12,6 +12,11 @@ mongo = PyMongo(application)
 def hello():
     return "hello"
 
+@application.route("/question", methods=["POST"])
+def question():
+    print(request.get_json())
+    return jsonify({"answer": "math"})
+
 # Serve React App
 @application.route('/', defaults={'path': ''})
 @application.route('/<path:path>')

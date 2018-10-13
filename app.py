@@ -4,17 +4,19 @@ from flask_pymongo import PyMongo
 from json import loads
 import os
 
-app = Flask(__name__, static_folder='./react_app/build')
-app.config["MONGO_URI"] = os.environ["MONGODB_URI"]
-mongo = PyMongo(app)
+application = Flask(__name__, static_folder='./react_app/build')
+application.config["MONGO_URI"] = os.environ["MONGODB_URI"]
+mongo = PyMongo(application)
 
 # Serve React App
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
+@application.route('/', defaults={'path': ''})
+@application.route('/<path:path>')
 def serve(path):
     if path != "" and os.path.exists("./react_app/build/" + path):
+        print("We're returning from directory")
         return send_from_directory('./react_app/build', path)
     else:
+        print("We're returning index.html")
         return send_from_directory('./react_app/build', 'index.html')
 
 """
@@ -22,7 +24,7 @@ Database test, pass in /database?val=VALUE
 
 Functionality: Takes in val argument, appends to collection, and returns entire collection
 """
-@app.route("/database")
+@application.route("/database")
 def database_test():
    args = request.args
    val = args["val"]
@@ -34,4 +36,4 @@ def database_test():
    return jsonify({"vals": loads(dumps(cursor))}) 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+    application.run(host="0.0.0.0")

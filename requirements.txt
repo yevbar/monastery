@@ -1,2 +1,3 @@
 gunicorn
 flask
+Flask-PyMongo

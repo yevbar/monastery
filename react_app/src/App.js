@@ -3,7 +3,7 @@ import React from 'react';
 class App extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = {ask: true, question: null, answer: false};
+		this.state = {ask: true, question: null, answer: false, url: null};
 		  this.askQuestion = this.askQuestion.bind(this);
       this.requestAnswer = this.requestAnswer.bind(this);
 	}
@@ -29,7 +29,8 @@ class App extends React.Component {
             })
         })
             .then(res => res.json())
-            .then(data => this.setState({answer: data.answer}));
+	    .then(data => {console.log(data);return data})
+            .then(data => this.setState({answer: data.answer.sentence, url: data.answer.url}));
     }
 
     askAgain = (event) => {
@@ -47,7 +48,7 @@ class App extends React.Component {
 				: 
 				      <div style={{display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column"}}>
               <span><b>{this.state.question}</b></span>
-              <span>{this.state.answer ? this.state.answer : "Loading"}</span>
+              <span style={{maxWidth: "900px", paddingLeft: "1em", paddingRight: "1em"}}>{this.state.answer ? <a href={this.state.url}>{this.state.answer}</a> : "Loading"}</span>
               <span onClick={this.askAgain} style={{color: "grey"}}><i>Ask another question</i></span>
               </div>
 			}

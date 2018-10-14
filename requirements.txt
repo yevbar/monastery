@@ -1,5 +1,4 @@
 gunicorn
 flask
 Flask-PyMongo
-pyStatParser
 sumy

@@ -13,8 +13,8 @@ mongo = PyMongo(application)
 
 @application.before_first_request
 def add_new_entry():
-    import nltk
-    nltk.download("punkt")
+    #import nltk
+    #nltk.download("punkt")
     from sumy.parsers.html import HtmlParser
     from sumy.parsers.plaintext import PlaintextParser
     from sumy.nlp.tokenizers import Tokenizer
@@ -23,7 +23,7 @@ def add_new_entry():
     from sumy.utils import get_stop_words
     LANGUAGE = "english"
     SENTENCES_COUNT=1
-    url = "https://waitbutwhy.com/2018/04/picking-career.html"
+    url = "https://www.lesswrong.com/posts/6DAYbBvT8nXw2HyZR/the-meaning-of-life"
     parser = HtmlParser.from_url(url, Tokenizer(LANGUAGE))
     stemmer = Stemmer(LANGUAGE)
     summarizer = Summarizer(stemmer)
@@ -32,10 +32,16 @@ def add_new_entry():
     for sentence in summarizer(parser.document, SENTENCES_COUNT):
         my_summary.append(sentence)
     print(my_summary)
-    mongo.db.sentences.insert_one({
-        "sentence": str(my_summary[0]).split()
+    """
+    mongo.db.summaries.insert_one({
+        "sentence": str(my_summary[0]).split(),
+        "url": url
     })
-    print((str(my_summary[0])).split())
+    """
+    #print((str(my_summary[0])).split())
+    vals = mongo.db["summaries"]
+    cursor = vals.find({})
+    #print({"vals": loads(dumps(cursor))}) 
 
 @application.route("/hello")
 def hello():
@@ -71,11 +77,24 @@ scrae
 def query_database(query):
     # TODO, incorporate query["rest"] in some way that helps with refining search?
     # The following line says that we need one of the following: question, action, topic (affected_entity)
-    similar_statements = mongo.db.statements.find({ "$or": [{"question": query["question"]}, {"action": query["action"]}, {"affected_entity": query["affected_entity"]}]})
-    print(similar_statements)
-    return query
+    #similar_statements = mongo.db.statements.find({ "$or": [{"question": query["question"]}, {"action": query["action"]}, {"affected_entity": query["affected_entity"]}]})
+    #similar_statements = list(mongo.db.summaries.find({ "$or": [{"$elemMatch": {"sentence": "*" + word + "*"}} for word in query["sentence"]]}))
+    similar_statements = []
+    #for word in query["sentence"]:
+    #    similar_statements.extend(list(mongo.db.summaries.find({ "sentence": {"$in": [word]}})))
+    similar_statements.extend(list(mongo.db.summaries.find({"sentence": {"$in": query["affected_entity"]}})))
+    print(similar_statements[0])
+    sentence = " ".join(similar_statements[0]["sentence"])
+    url = similar_statements[0]["url"]
+    print(sentence)
+    print(url)
+    return {
+            "sentence": sentence,
+            "url": url
+    }
 
 def string_to_query(string):
+    print("Helloooo")
     parser = Parser()
     parsed = parser.parse(string)
     question = []
@@ -83,20 +102,29 @@ def string_to_query(string):
     action = []
     action.extend([word for word,pos in parsed.pos() if 'VB' in pos])
     affected_entity = []
-    affected_entity.extend([word for word,pos in parsed.pos() if 'NN' in pos])
+    affected_entity.extend([word for word,pos in parsed.pos() if 'NN' in pos or pos == "VBG"])
     particle = list(parsed.subtrees(filter=lambda x: x.label()=='PRT'))
     tree = parsed
     verb_phrases_list = list(parsed.subtrees(filter=lambda x: "V" in x.label()))[0]
-    entity = [x for x in parsed.pos() if x[0] == affected_entity[0]][0]
+    entity = None
+    try:
+        entity = [x for x in parsed.pos() if x[0] == affected_entity[0]][0]
+    except:
+        entity = None
     print(question)
     print(action)
     print(affected_entity)
-    print(parsed.pos()[parsed.pos().index(entity)+1:])
+    print(parsed.pos())
+    try:
+        print(parsed.pos()[parsed.pos().index(entity)+1:])
+    except:
+        print("entity is None")
     output = {
         "question": question,
         "action": action,
         "affected_entity": affected_entity,
-        "rest": parsed.pos()[parsed.pos().index(entity)+1:]
+        "rest": None,#parsed.pos()[parsed.pos().index(entity)+1:],
+        "sentence": string
     }
     return output
 
@@ -104,9 +132,11 @@ def string_to_query(string):
 def question():
     inbound_data = request.get_json()
     question = inbound_data["question"]
+    print("Heyo")
     query = string_to_query(question)
+    print("Beep boop")
     result = query_database(query)
-    return jsonify({"answer": str(result)})
+    return jsonify({"answer": result})
 
 # Serve React App
 @application.route('/', defaults={'path': ''})

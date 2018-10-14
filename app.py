@@ -13,8 +13,8 @@ mongo = PyMongo(application)
 
 @application.before_first_request
 def add_new_entry():
-    #import nltk
-    #nltk.download("punkt")
+    import nltk
+    nltk.download("punkt")
     from sumy.parsers.html import HtmlParser
     from sumy.parsers.plaintext import PlaintextParser
     from sumy.nlp.tokenizers import Tokenizer

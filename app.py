@@ -11,6 +11,32 @@ application = Flask(__name__, static_folder='./react_app/build')
 application.config["MONGO_URI"] = os.environ["MONGODB_URI"]
 mongo = PyMongo(application)
 
+@application.before_first_request
+def add_new_entry():
+    import nltk
+    nltk.download("punkt")
+    from sumy.parsers.html import HtmlParser
+    from sumy.parsers.plaintext import PlaintextParser
+    from sumy.nlp.tokenizers import Tokenizer
+    from sumy.summarizers.lsa import LsaSummarizer as Summarizer
+    from sumy.nlp.stemmers import Stemmer
+    from sumy.utils import get_stop_words
+    LANGUAGE = "english"
+    SENTENCES_COUNT=1
+    url = "https://waitbutwhy.com/2018/04/picking-career.html"
+    parser = HtmlParser.from_url(url, Tokenizer(LANGUAGE))
+    stemmer = Stemmer(LANGUAGE)
+    summarizer = Summarizer(stemmer)
+    summarizer.stop_words = get_stop_words(LANGUAGE)
+    my_summary = []
+    for sentence in summarizer(parser.document, SENTENCES_COUNT):
+        my_summary.append(sentence)
+    print(my_summary)
+    mongo.db.sentences.insert_one({
+        "sentence": str(my_summary[0]).split()
+    })
+    print((str(my_summary[0])).split())
+
 @application.route("/hello")
 def hello():
     return "hello"
@@ -45,7 +71,7 @@ scrae
 def query_database(query):
     # TODO, incorporate query["rest"] in some way that helps with refining search?
     # The following line says that we need one of the following: question, action, topic (affected_entity)
-    similar_statements = mongo.db.statements.find({ $or: [{"question": query["question"]}, {"action": query["action"]}, {"affected_entity": query["affected_entity"]}]})
+    similar_statements = mongo.db.statements.find({ "$or": [{"question": query["question"]}, {"action": query["action"]}, {"affected_entity": query["affected_entity"]}]})
     print(similar_statements)
     return query
 

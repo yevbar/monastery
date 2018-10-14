@@ -34,7 +34,7 @@ class App extends React.Component {
     }
 
     askAgain = (event) => {
-        this.setState({ask: true, question: null});
+        this.setState({ask: true, question: null, answer: null});
     }
 
 	render() {

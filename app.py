@@ -21,27 +21,28 @@ def add_new_entry():
     from sumy.summarizers.lsa import LsaSummarizer as Summarizer
     from sumy.nlp.stemmers import Stemmer
     from sumy.utils import get_stop_words
-    LANGUAGE = "english"
-    SENTENCES_COUNT=1
-    url = "https://www.lesswrong.com/posts/6DAYbBvT8nXw2HyZR/the-meaning-of-life"
-    parser = HtmlParser.from_url(url, Tokenizer(LANGUAGE))
-    stemmer = Stemmer(LANGUAGE)
-    summarizer = Summarizer(stemmer)
-    summarizer.stop_words = get_stop_words(LANGUAGE)
-    my_summary = []
-    for sentence in summarizer(parser.document, SENTENCES_COUNT):
-        my_summary.append(sentence)
-    print(my_summary)
-    """
-    mongo.db.summaries.insert_one({
+    urls = []
+    for url in urls:
+        LANGUAGE = "english"
+        SENTENCES_COUNT=1
+        parser = HtmlParser.from_url(url, Tokenizer(LANGUAGE))
+        stemmer = Stemmer(LANGUAGE)
+        summarizer = Summarizer(stemmer)
+        summarizer.stop_words = get_stop_words(LANGUAGE)
+        my_summary = []
+        for sentence in summarizer(parser.document, SENTENCES_COUNT):
+            my_summary.append(sentence)
+        print(my_summary)
+        
+        mongo.db.summaries.insert_one({
         "sentence": str(my_summary[0]).split(),
         "url": url
-    })
-    """
-    #print((str(my_summary[0])).split())
+        })
+        
+        #print((str(my_summary[0])).split())
     vals = mongo.db["summaries"]
     cursor = vals.find({})
-    #print({"vals": loads(dumps(cursor))}) 
+    print({"vals": loads(dumps(cursor))}) 
 
 @application.route("/hello")
 def hello():
@@ -83,6 +84,11 @@ def query_database(query):
     #for word in query["sentence"]:
     #    similar_statements.extend(list(mongo.db.summaries.find({ "sentence": {"$in": [word]}})))
     similar_statements.extend(list(mongo.db.summaries.find({"sentence": {"$in": query["affected_entity"]}})))
+    if len(similar_statements) == 0:
+        return {
+                "sentence": "No answer found",
+                "url": "https://youtu.be/dQw4w9WgXcQ"
+        }
     print(similar_statements[0])
     sentence = " ".join(similar_statements[0]["sentence"])
     url = similar_statements[0]["url"]

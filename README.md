@@ -32,3 +32,5 @@ We're using mLab MongoDB Heroku plugin and the ideal structure of an object in t
 	]
 }
 ```
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fyevbar%2Fmonastery.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fyevbar%2Fmonastery?ref=badge_shield)
